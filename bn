@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhagad News // Confidential Matrix Confessions</title>
+    <style>
+        :root {
+            --bg-color: #050b05;
+            --surface-color: rgba(10, 25, 10, 0.88);
+            --primary-accent: #00ff66;
+            --primary-accent-dim: #008f39;
+            --primary-accent-glow: rgba(0, 255, 102, 0.25);
+            --text-color: #c9fcd9;
+            --text-muted: #528a64;
+            --danger-color: #ff3344;
+            --font-mono: "Courier New", Courier, monospace;
+            --border-glow: 1px solid rgba(0, 255, 102, 0.35);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-mono);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Matrix Canvas Background */
+        #matrixCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.18;
+        }
+
+        /* Layout Container */
+        .wrapper {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2.5rem 1.25rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            border-bottom: var(--border-glow);
+            padding-bottom: 1.5rem;
+        }
+
+        .channel-tag {
+            display: inline-block;
+            background: rgba(0, 255, 102, 0.08);
+            border: 1px solid var(--primary-accent-dim);
+            color: var(--primary-accent);
+            padding: 4px 14px;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border-radius: 2px;
+            margin-bottom: 0.75rem;
+        }
+
+        h1 {
+            color: var(--primary-accent);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: clamp(1.8rem, 4vw, 2.6rem);
+            text-shadow: 0 0 10px var(--primary-accent-glow);
+            margin-bottom: 0.5rem;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        /* Terminal Form Card */
+        .card {
+            background: var(--surface-color);
+            border: var(--border-glow);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), 0 0 10px var(--primary-accent-glow);
+            border-radius: 4px;
+            padding: 1.5rem;
+            margin-bottom: 2.5rem;
+            backdrop-filter: blur(4px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(0, 255, 102, 0.15);
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.8rem;
+            color: var(--primary-accent);
+        }
+
+        .indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary-accent);
+            box-shadow: 0 0 6px var(--primary-accent);
+            margin-right: 6px;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.4rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            background: #020702;
+            border: 1px solid rgba(0, 255, 102, 0.3);
+            color: var(--primary-accent);
+            padding: 0.75rem;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            border-radius: 2px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 8px var(--primary-accent-glow);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 110px;
+        }
+
+        .btn {
+            background: transparent;
+            color: var(--primary-accent);
+            border: 1px solid var(--primary-accent);
+            padding: 0.7rem 1.4rem;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border-radius: 2px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background: var(--primary-accent);
+            color: #000;
+            box-shadow: 0 0 12px var(--primary-accent);
+        }
+
+        .btn-danger {
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-color);
+            color: #fff;
+            box-shadow: 0 0 12px rgba(255, 51, 68, 0.5);
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+        }
+
+        /* Toggle Moderator Panel Switch */
+        .mod-switch-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+        }
+
+        /* Confessions Display Feed */
+        .confession-item {
+            background: #020802;
+            border-left: 3px solid var(--primary-accent);
+            border-top: 1px solid rgba(0, 255, 102, 0.15);
+            border-right: 1px solid rgba(0, 255, 102, 0.15);
+            border-bottom: 1px solid rgba(0, 255, 102, 0.15);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 2px;
+        }
+
+        .confession-item.pending-item {
+            border-left-color: #ffaa00;
+        }
+
+        .confession-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .confession-meta .author {
+            color: var(--primary-accent);
+        }
+
+        .confession-body {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            color: #defce6;
+            margin-bottom: 0.8rem;
+        }
+
+        .action-row {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.6rem;
+            padding-top: 0.6rem;
+            border-top: 1px dashed rgba(0, 255, 102, 0.2);
+        }
+
+        .empty-placeholder {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            padding: 2rem 0;
+            border: 1px dashed rgba(0, 255, 102, 0.2);
+            border-radius: 2px;
+        }
+
+        /* Notification Toast */
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #000;
+            border: 1px solid var(--primary-accent);
+            color: var(--primary-accent);
+            padding: 10px 18px;
+            font-size: 0.8rem;
+            box-shadow: 0 0 10px var(--primary-accent-glow);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+        }
+
+        #toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="matrixCanvas"></canvas>
+
+    <div class="wrapper">
+        <header>
+            <div class="channel-tag">Network Relay: @bhagad_news</div>
+            <h1>Bhagad News Terminal</h1>
+            <p class="subtitle">&gt; Submit anonymous confessions directly to the editorial team.</p>
+        </header>
+
+        <!-- User Submission Box -->
+        <section class="card">
+            <div class="card-header">
+                <div><span class="indicator"></span>NODE STATUS: ENCRYPTED & ANONYMOUS</div>
+                <div>SEC_LEVEL: 0</div>
+            </div>
+            <form id="confessionForm">
+                <div class="form-group">
+                    <label for="aliasInput">// ALIAS / CODENAME (OPTIONAL):</label>
+                    <input type="text" id="aliasInput" placeholder="Agent Anonymous..." maxlength="30" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="confessionInput">// CONFESSION INTEL (REQUIRED):</label>
+                    <textarea id="confessionInput" placeholder="Enter encrypted confession... no IP or identifiers stored." required></textarea>
+                </div>
+                <button type="submit" class="btn">&gt; Transmit Anonymously</button>
+            </form>
+        </section>
+
+        <!-- Moderator Toggle -->
+        <div class="mod-switch-container">
+            <button id="toggleAdminBtn" class="btn btn-sm">[MOD PANEL: LOCKED]</button>
+        </div>
+
+        <!-- Moderator Approval Section -->
+        <section class="card" id="adminSection" style="display: none; border-color: #ffaa00;">
+            <div class="card-header" style="color: #ffaa00; border-color: rgba(255, 170, 0, 0.3);">
+                <div>MODERATION CONSOLE // BHAGAD NEWS ADMIN</div>
+                <div id="pendingCount">0 UNAPPROVED</div>
+            </div>
+            <div id="pendingList">
+                <div class="empty-placeholder">No unapproved confessions pending review.</div>
+            </div>
+        </section>
+
+        <!-- Approved Public Wire (Insta Feed Ready) -->
+        <section class="card">
+            <div class="card-header">
+                <div>FEED: APPROVED INSTA WIRE</div>
+                <div id="approvedCount">0 LOGGED</div>
+            </div>
+            <div id="approvedList">
+                <div class="empty-placeholder">No broadcasted confessions found.</div>
+            </div>
+        </section>
+    </div>
+
+    <div id="toast">Transmitted</div>
+
+    <script>
+        // Matrix Canvas Rain Effect
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const chars = '0123456789ABCDEFｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈ';
+        const fontSize = 14;
+        let columns = Math.floor(canvas.width / fontSize);
+        let drops = Array(columns).fill(1);
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(5, 11, 5, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00ff66';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars.charAt(Math.floor(Math.random() * chars.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 35);
+
+        // Confessions Store (LocalStorage)
+        const STORAGE_KEY = 'bhagad_news_confessions';
+        let confessions = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [
+            {
+                id: 'init-1',
+                alias: 'Campus Ghost',
+                text: 'The college cafeteria actually uses mineral water only when inspections happen. Bhagad News needs to expose this.',
+                timestamp: new Date(Date.now() - 3600000).toLocaleString(),
+                approved: true
+            }
+        ];
+
+        function saveConfessions() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(confessions));
+            renderLists();
+        }
+
+        // Notification Toast
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2400);
+        }
+
+        // UI Renders
+        const pendingList = document.getElementById('pendingList');
+        const approvedList = document.getElementById('approvedList');
+        const pendingCount = document.getElementById('pendingCount');
+        const approvedCount = document.getElementById('approvedCount');
+
+        function renderLists() {
+            const pending = confessions.filter(c => !c.approved);
+            const approved = confessions.filter(c => c.approved);
+
+            pendingCount.innerText = `${pending.length} UNAPPROVED`;
+            approvedCount.innerText = `${approved.length} LOGGED`;
+
+            // Render Pending Submissions
+            if (pending.length === 0) {
+                pendingList.innerHTML = '<div class="empty-placeholder">No unapproved confessions pending review.</div>';
+            } else {
+                pendingList.innerHTML = pending.map(item => `
+                    <div class="confession-item pending-item" data-id="${item.id}">
+                        <div class="confession-meta">
+                            <span class="author">// From: ${escapeHtml(item.alias)}</span>
+                            <span>${item.timestamp}</span>
+                        </div>
+                        <div class="confession-body">${escapeHtml(item.text)}</div>
+                        <div class="action-row">
+                            <button class="btn btn-sm" onclick="approveConfession('${item.id}')">✔ Approve &amp; Post</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteConfession('${item.id}')">✖ Reject</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Render Approved Feed
+            if (approved.length === 0) {
+                approvedList.innerHTML = '<div class="empty-placeholder">No broadcasted confessions found.</div>';
+            } else {
+                approvedList.innerHTML = approved.map(item => `
+                    <div class="confession-item" data-id="${item.id}">
+                        <div class="confession-meta">
+                            <span class="author">// Anonymous Agent: ${escapeHtml(item.alias)}</span>
+                            <span>${item.timestamp}</span>
+                        </div>
+                        <div class="confession-body">${escapeHtml(item.text)}</div>
+                        <div class="action-row">
+                            <button class="btn btn-sm" onclick="copyForInstagram('${item.id}')">📋 Copy for Insta Story/Post</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteConfession('${item.id}')">🗑 Remove</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // Form Submit
+        const form = document.getElementById('confessionForm');
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const aliasVal = document.getElementById('aliasInput').value.trim() || 'Anonymous';
+            const textVal = document.getElementById('confessionInput').value.trim();
+
+            if (!textVal) return;
+
+            const newSubmission = {
+                id: 'conf-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+                alias: aliasVal,
+                text: textVal,
+                timestamp: new Date().toLocaleString(),
+                approved: false
+            };
+
+            confessions.unshift(newSubmission);
+            saveConfessions();
+
+            form.reset();
+            showToast('Intel transmitted to Bhagad News team for verification.');
+        });
+
+        // Moderation Handlers
+        window.approveConfession = function (id) {
+            const index = confessions.findIndex(c => c.id === id);
+            if (index !== -1) {
+                confessions[index].approved = true;
+                saveConfessions();
+                showToast('Approved! Ready for Instagram broadcast.');
+            }
+        };
+
+        window.deleteConfession = function (id) {
+            confessions = confessions.filter(c => c.id !== id);
+            saveConfessions();
+            showToast('Confession record removed.');
+        };
+
+        window.copyForInstagram = function (id) {
+            const item = confessions.find(c => c.id === id);
+            if (!item) return;
+
+            const instagramCaption = 
+`🚨 [BHAGAD NEWS // CONFESSION WIRE]
+────────────────────
+"${item.text}"
+────────────────────
+👤 Alias: ${item.alias}
+🗓 Timestamp: ${item.timestamp}
+#bhagadnews #confessions #anonymous`;
+
+            navigator.clipboard.writeText(instagramCaption).then(() => {
+                showToast('Formatted copy saved to clipboard for Instagram!');
+            }).catch(() => {
+                showToast('Clipboard access denied.');
+            });
+        };
+
+        // Moderator Panel Access Toggle
+        const toggleAdminBtn = document.getElementById('toggleAdminBtn');
+        const adminSection = document.getElementById('adminSection');
+        let isAdminOpen = false;
+
+        toggleAdminBtn.addEventListener('click', () => {
+            isAdminOpen = !isAdminOpen;
+            if (isAdminOpen) {
+                adminSection.style.display = 'block';
+                toggleAdminBtn.innerText = '[MOD PANEL: ACTIVE]';
+                toggleAdminBtn.style.borderColor = '#ffaa00';
+                toggleAdminBtn.style.color = '#ffaa00';
+            } else {
+                adminSection.style.display = 'none';
+                toggleAdminBtn.innerText = '[MOD PANEL: LOCKED]';
+                toggleAdminBtn.style.borderColor = 'var(--primary-accent)';
+                toggleAdminBtn.style.color = 'var(--primary-accent)';
+            }
+        });
+
+        // Initialize state
+        renderLists();
+    </script>
+</body>
+</html>
